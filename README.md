@@ -2,4 +2,4 @@
 
 Scripts parse data about product from all categories
 
-- cmd `go run parse_all.go`
+- cmd `go run main.go`
