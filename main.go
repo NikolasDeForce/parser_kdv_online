@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gocarina/gocsv"
@@ -61,7 +62,12 @@ func main() {
 	parseUrl()
 
 	dates := readCSV("./dates/catalog_url.csv")
+
+	var wg sync.WaitGroup
+
 	for _, date := range dates {
+		wg.Add(1)
+
 		shortName := strings.Split(date.URL, "/")
 		fName := fmt.Sprintf("./dates/kdv_%v.csv", shortName[len(shortName)-1])
 		file, err := os.Create(fName)
@@ -75,7 +81,8 @@ func main() {
 		// Write CSV header
 		writer.Write([]string{"Name", "Price", "Value", "URL"})
 
-		go func() {
+		go func(date CSVURL) {
+			defer wg.Done()
 			// Instantiate default collector
 			c := colly.NewCollector()
 
@@ -90,11 +97,13 @@ func main() {
 			})
 
 			c.Visit(fmt.Sprintf("%v?page=1&limit=100&sort=default%3Aasc", date.URL))
-		}()
+		}(date)
 
-		log.Printf("Scraping %s %s", date.URL, time.Now())
+		time.Sleep(700 * time.Millisecond)
 
-		time.Sleep(900 * time.Millisecond)
+		log.Printf("Scraping %s", date.URL)
+
+		wg.Wait()
 	}
 
 	log.Println("Scraping finished, check file")
