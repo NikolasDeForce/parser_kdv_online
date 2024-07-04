@@ -9,13 +9,8 @@ import (
 	"sync"
 	"time"
 
-	//"github.com/gocarina/gocsv"
 	"github.com/gocolly/colly/v2"
 )
-
-// type CSVURL struct {
-// 	URL string `csv:"URL"`
-// }
 
 func parseUrl(urls []string) []string {
 	urls = []string{}
@@ -31,20 +26,6 @@ func parseUrl(urls []string) []string {
 
 	return urls
 }
-
-// func readCSV(fName string) []CSVURL {
-// 	file, err := os.Open(fName)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	defer file.Close()
-
-// 	dates := []CSVURL{}
-// 	if err := gocsv.UnmarshalFile(file, &dates); err != nil {
-// 		fmt.Println(err)
-// 	}
-// 	return dates
-// }
 
 func main() {
 
