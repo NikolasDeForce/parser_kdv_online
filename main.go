@@ -9,66 +9,55 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gocarina/gocsv"
+	//"github.com/gocarina/gocsv"
 	"github.com/gocolly/colly/v2"
 )
 
-type CSVURL struct {
-	URL string `csv:"URL"`
-}
+// type CSVURL struct {
+// 	URL string `csv:"URL"`
+// }
 
-func parseUrl() {
-	fName := "./dates/catalog_url.csv"
-	file, err := os.Create(fName)
-	if err != nil {
-		log.Fatalf("Cannot create file %q: %s\n", fName, err)
-		return
-	}
-	defer file.Close()
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
-	// Write CSV header
-	writer.Write([]string{"URL"})
-
+func parseUrl(urls []string) []string {
+	urls = []string{}
 	// Instantiate default collector
 	c := colly.NewCollector()
 
 	// Extract product details
 	c.OnHTML("a.a9ki2WaUy", func(e *colly.HTMLElement) {
-		writer.Write([]string{
-			e.Request.AbsoluteURL(e.Attr("href")),
-		})
+		urls = append(urls, e.Request.AbsoluteURL(e.Attr("href")))
 	})
 
 	c.Visit("https://kdvonline.ru/catalog/igrushki-456")
+
+	return urls
 }
 
-func readCSV(fName string) []CSVURL {
-	file, err := os.Open(fName)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
+// func readCSV(fName string) []CSVURL {
+// 	file, err := os.Open(fName)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	defer file.Close()
 
-	dates := []CSVURL{}
-	if err := gocsv.UnmarshalFile(file, &dates); err != nil {
-		fmt.Println(err)
-	}
-	return dates
-}
+// 	dates := []CSVURL{}
+// 	if err := gocsv.UnmarshalFile(file, &dates); err != nil {
+// 		fmt.Println(err)
+// 	}
+// 	return dates
+// }
 
 func main() {
 
-	parseUrl()
+	urls := []string{}
 
-	dates := readCSV("./dates/catalog_url.csv")
+	urls = parseUrl(urls)
 
 	var wg sync.WaitGroup
 
-	for _, date := range dates {
+	for _, date := range urls {
 		wg.Add(1)
 
-		shortName := strings.Split(date.URL, "/")
+		shortName := strings.Split(date, "/")
 		fName := fmt.Sprintf("./dates/kdv_%v.csv", shortName[len(shortName)-1])
 		file, err := os.Create(fName)
 		if err != nil {
@@ -81,7 +70,7 @@ func main() {
 		// Write CSV header
 		writer.Write([]string{"Name", "Price", "Value", "URL"})
 
-		go func(date CSVURL) {
+		go func() {
 			defer wg.Done()
 			// Instantiate default collector
 			c := colly.NewCollector()
@@ -96,12 +85,12 @@ func main() {
 				})
 			})
 
-			c.Visit(fmt.Sprintf("%v?page=1&limit=100&sort=default%3Aasc", date.URL))
-		}(date)
+			c.Visit(fmt.Sprintf("%v?page=1&limit=100&sort=default%3Aasc", date))
+		}()
 
 		time.Sleep(700 * time.Millisecond)
 
-		log.Printf("Scraping %s", date.URL)
+		log.Printf("Scraping %s", date)
 
 		wg.Wait()
 	}
