@@ -12,8 +12,8 @@ import (
 	"github.com/gocolly/colly/v2"
 )
 
-func parseUrl(urls []string) []string {
-	urls = []string{}
+func parseUrl() []string {
+	urls := []string{}
 	// Instantiate default collector
 	c := colly.NewCollector()
 
@@ -29,9 +29,7 @@ func parseUrl(urls []string) []string {
 
 func main() {
 
-	urls := []string{}
-
-	urls = parseUrl(urls)
+	urls := parseUrl()
 
 	var wg sync.WaitGroup
 
